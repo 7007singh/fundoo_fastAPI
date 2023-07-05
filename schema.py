@@ -14,10 +14,13 @@ class UserLogin(BaseModel):
 
 
 class NoteSchema(BaseModel):
-    # user_id: int
     title: str
     description: str
     color: str
 
     class Config:
         orm_mode = True
+
+
+class LabelSchema(BaseModel):
+    name: str
