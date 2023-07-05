@@ -1,5 +1,10 @@
 from jose import jwt
 from datetime import datetime, timedelta
+from fastapi.security import APIKeyHeader
+from fastapi import Security, Depends, HTTPException, Request
+from sqlalchemy.orm import Session
+from config import get_db
+from model import User
 
 
 class JWT:
@@ -16,5 +21,16 @@ class JWT:
         except jwt.JWTError as e:
             raise e
 
+
+api_key = APIKeyHeader(name='Authorization')
+
+
+def jwt_authorization(request: Request, token: str = Security(api_key), db: Session = Depends(get_db)):
+    decode_token = JWT.jwt_decode(token)
+    user_id = decode_token.get('user')
+    user = db.query(User).filter_by(id=user_id).one_or_none()
+    if not user:
+        raise HTTPException(status_code=401, detail='User not authorized')
+    request.state.user = user
 
 
