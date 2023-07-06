@@ -3,7 +3,7 @@ from logger import logger
 from sqlalchemy.orm import Session
 import schema
 from config import get_db
-from model import Label, User
+from model import Label, User, Note
 
 label_router = APIRouter()
 
@@ -61,3 +61,22 @@ def delete_label(request: Request, label_id: int, db: Session = Depends(get_db))
     except Exception as e:
         logger.exception(e.args[0])
         return {'message': e.args[0], 'status': 400, 'data': {}}
+
+
+# @label_router.post('/add_label/{note_id}', status_code=status.HTTP_201_CREATED)
+# def add_label(request: Request, note_id: int, label: schema.LabelSchema, db: Session = Depends(get_db)):
+#     try:
+#         note = db.query(Note).filter_by(id=note_id).one_or_none()
+#         if not note:
+#             return {'message': 'Note not found', 'status': 400, 'data': {}}
+#         label_obj = db.query(Label).filter_by(user_id=request.state.user.id)
+#         # if not label_obj:
+#         #     label_obj = Label(name=label.name, user_id=request.state.user.id)
+#         #     db.add(label_obj)
+#         #     db.commit()
+#         note.label.append(label_obj)
+#         db.commit()
+#         return {'message': 'Label added to note', 'status': 201, 'data': {}}
+#     except Exception as e:
+#         logger.exception(e.args[0])
+#         return {'message': e.args[0], 'status': 400, 'data': {}}

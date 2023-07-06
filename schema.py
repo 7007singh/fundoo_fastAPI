@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional, List
 
 
 class User(BaseModel):
@@ -24,3 +25,8 @@ class NoteSchema(BaseModel):
 
 class LabelSchema(BaseModel):
     name: str
+
+
+class LabelAssociation(BaseModel):
+    note_id: int
+    label_id: Optional[List[int]]

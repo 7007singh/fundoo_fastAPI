@@ -1,10 +1,17 @@
-from sqlalchemy import Column, String, Integer, ForeignKey
-from sqlalchemy.orm import relationship, mapped_column
-
+from sqlalchemy import Column, String, Integer, ForeignKey, Table
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 from config import Base, engine
 
 
 Base.metadata.create_all(engine)
+
+
+collaborator = Table(
+    'collaborator',
+    Base.metadata,
+    Column('user_id', ForeignKey('users.id')),
+    Column('note_id', ForeignKey('notes.id'))
+)
 
 
 class User(Base):
@@ -17,6 +24,7 @@ class User(Base):
     password = Column(String)
     note = relationship('Note', back_populates='user')
     label = relationship('Label', back_populates='user')
+    note_m2m = relationship('Note', secondary=collaborator, back_populates='user_m2m')
 
 
 class Note(Base):
@@ -28,6 +36,7 @@ class Note(Base):
     color = Column(String(30))
     user_id = mapped_column(ForeignKey('users.id'))
     user = relationship('User', back_populates='note')
+    user_m2m = relationship('User', secondary=collaborator, back_populates='note_m2m')
 
 
 class Label(Base):
@@ -37,4 +46,3 @@ class Label(Base):
     name = Column(String(100))
     user_id = mapped_column(ForeignKey('users.id'))
     user = relationship('User', back_populates='label')
-
