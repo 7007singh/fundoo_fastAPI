@@ -1,9 +1,10 @@
 from logger import logger
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, status, Request, FastAPI
 from sqlalchemy.orm import Session
 import schema
 from model import Note, User
 from config import get_db
+
 note_router = APIRouter()
 
 
@@ -45,7 +46,11 @@ def get_user_notes(request: Request, db: Session = Depends(get_db)):
         user = db.query(User).filter_by(id=request.state.user.id).first()
         if not user:
             return {'message': 'User not found', 'status': 400, 'data': {}}
-        return {'message': 'Notes retrieved', 'status': 200, 'data': user.note}
+        user.note.extend(user.note_m2m)
+        print(user.note)
+        data = [x.__dict__ for x in user.note]
+        # return {'message': 'Notes retrieved', 'status': 200, 'data': data}
+        return user.note
     except Exception as e:
         logger.exception(e.args[0])
         return {'message': e.args[0], 'status': 400, 'data': {}}
@@ -60,6 +65,45 @@ def delete_note(request: Request, note_id: int, db: Session = Depends(get_db)):
         db.delete(note)
         db.commit()
         return {'message': 'Note deleted', 'status': 200, 'data': {}}
+    except Exception as e:
+        logger.exception(e.args[0])
+        return {'message': e.args[0], 'status': 400, 'data': {}}
+
+
+@note_router.post('/collaborate/', status_code=status.HTTP_201_CREATED)
+def add_collaborator(request: Request, data: schema.Collaborator, db: Session = Depends(get_db)):
+    try:
+        note = db.query(Note).filter_by(id=data.note_id, user_id=request.state.user.id).one_or_none()
+        if not note:
+            raise Exception('note not found')
+        collaborator = []
+        for i in data.user_id:
+            user = db.query(User).filter_by(id=i).one_or_none()
+            if not user:
+                raise Exception(f"user {i} not found")
+            collaborator.append(user)
+        note.user_m2m.extend(collaborator)
+        print(note.user_m2m)
+        db.commit()
+        return {'message': 'Note collaborated', 'status': 201, 'data': {}}
+    except Exception as e:
+        logger.exception(e.args[0])
+        return {'message': e.args[0], 'status': 400, 'data': {}}
+
+
+@note_router.delete('/delete_collaborator/', status_code=status.HTTP_200_OK)
+def delete_collaborator(request: Request, data: schema.DeleteCollaborator, db: Session = Depends(get_db)):
+    try:
+        user = db.query(User).filter_by(id=data.user_id).first()
+        if not user:
+            raise Exception('user not found')
+        note = db.query(Note).filter_by(id=data.note_id, user_id=request.state.user.id).one_or_none()
+        if not note:
+            raise Exception('note not found')
+        if user in note.user_m2m:
+            note.user_m2m.remove(user)
+        db.commit()
+        return {'message': 'Collaborator deleted', 'status': 200, 'data': {}}
     except Exception as e:
         logger.exception(e.args[0])
         return {'message': e.args[0], 'status': 400, 'data': {}}

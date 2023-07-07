@@ -27,6 +27,11 @@ class LabelSchema(BaseModel):
     name: str
 
 
-class LabelAssociation(BaseModel):
+class Collaborator(BaseModel):
     note_id: int
-    label_id: Optional[List[int]]
+    user_id: Optional[List[int]]
+
+
+class DeleteCollaborator(BaseModel):
+    note_id: int
+    user_id: int

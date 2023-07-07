@@ -1,5 +1,5 @@
 from logger import logger
-from fastapi import APIRouter, status, Depends, Response
+from fastapi import APIRouter, status, Depends, Response, FastAPI
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy.orm import Session
 import schema
@@ -19,6 +19,7 @@ def create_user(user: schema.User, db: Session = Depends(get_db)):
         db.add(user)
         db.commit()
         db.refresh(user)
+        return {"message": 'User registered successfully', 'Status': 201, 'data': user}
     except Exception as e:
         logger.exception(e.args[0])
         return {"message": 'User registered successfully', 'Status': 201, 'data': user}
